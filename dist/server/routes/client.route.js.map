@@ -1,0 +1,1 @@
+{"version":3,"sources":["server/routes/client.route.js"],"names":["router","Router","use"],"mappings":";;;;;;AAAA;;;;AACA;;;;AACA;;;;AACA;;;;;;AAEA,IAAMA,SAAS,kBAAQC,MAAR,EAAf,C,CAAiC;;AAEjC;AACAD,OAAOE,GAAP,CAAW,QAAX;;AAEA;AACAF,OAAOE,GAAP,CAAW,QAAX;;AAEA;AACAF,OAAOE,GAAP,CAAW,OAAX;;kBAEeF,M","file":"client.route.js","sourceRoot":"../../../../.."}

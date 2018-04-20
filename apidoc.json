@@ -1,0 +1,7 @@
+{
+  "name": "PS_backend API Documentation",
+  "version": "0.1.0",
+  "description": "REST API documentation for the frontend",
+  "title": "PS_backend API Documentation",
+  "url" : "http://localhost:4040/api"
+}

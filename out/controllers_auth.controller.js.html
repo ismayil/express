@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: controllers/auth.controller.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: controllers/auth.controller.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import jwt from 'jsonwebtoken';
+import httpStatus from 'http-status';
+import APIError from '../helpers/APIError';
+import nodemailer from 'nodemailer';
+import config from '../../config/config';
+import User from '../models/user.model';
+import { CLIENT_URL, SERVER_EMAIL } from '../../config/constants';
+
+
+/**
+ * @apiIgnore Not finished Method
+ * @api {POST} /auth/login Login
+ * @APIGroup Auth
+ * @apidescription User login action
+ * @apiparam {String} username Username or Email - There should be either email or username
+ * @apiparam {String} password User password
+ * @apiSuccess {String} token User token.
+ * @apiSuccess {Object} userData User full info. { &lt;code>username&lt;/code>, &lt;code>email&lt;/code>, &lt;code>phoneNumber&lt;/code>, &lt;code>img_url&lt;/code>, &lt;code>firstname&lt;/code>, &lt;code>lastname&lt;/code> }
+ * @apiError UserNotFound &lt;code>Username&lt;/code> or &lt;code>Password&lt;/code> is incorrect.
+ */
+const login = (req, res, next) => {
+  // Ideally you'll fetch this from the db
+  // Idea here was to show how jwt works with simplicity
+  // if (req.body.username === user.username &amp;&amp; req.body.password === user.password) {
+  if (true) {
+    const token = jwt.sign({
+      username: req.body.phoneNumber
+    }, config.jwtSecret);
+    return res.json({
+      token,
+      phoneNumber: req.body.phoneNumber
+    });
+  }
+
+  const err = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true);
+  return next(err);
+}
+
+
+/**
+ * @api {POST} /auth/register Registration
+ * @APIGroup Auth
+ * @apidescription User registration action
+ * @apiparam {String} username Username - Should be unique
+ * @apiparam {String} email User Email - Should be unique
+ * @apiparam {Number} phoneNumber User Phone number - Should be unique. Valid version: +999999999999 `regexp(/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{6}$/)`
+ * @apiparam {String} password User password
+ * @apiSuccess {String} status Thanks! Please check your email, the verification link to the email.
+ * @apiError UnableCreateUser Unable to create user.
+ */
+const register = (req, res, next) => {
+  const {
+    username,
+    email,
+    phoneNumber,
+    password
+  } = req.body;
+
+  const user = new User ({
+    username, email, phoneNumber, password
+  });
+
+  let sendVerificationEmail = () => {
+
+    const token = jwt.sign({
+      phoneNumber
+    }, config.jwtSecret);
+
+    let transporter = nodemailer.createTransport({
+      service: 'Gmail',
+      auth: {
+        user: SERVER_EMAIL, // Your email id
+        pass: '13nicataxmedov342142913' // Your password
+      }
+    });
+
+    let text = `
+      ${CLIENT_URL}/user_confirmation?token=${token}
+    `;
+
+    let mailOptions = {
+      from: SERVER_EMAIL, // sender address
+      to: email, // list of receivers
+      subject: 'Email Example', // Subject line
+      text: text //, // plaintext body
+      // html: '&lt;b>Hello world ✔&lt;/b>' // You can choose to send an HTML body instead
+    };
+
+    transporter.sendMail(mailOptions, function(error, info){
+      if(error){
+        // console.log(error);
+      }
+      else{
+        // console.log('Message sent: ' + info.response);
+      };
+    });
+  }
+
+  user.save()
+    .then(savedUser => {
+
+      // Send email for user activation
+      sendVerificationEmail();
+
+      return res.json(savedUser)
+    })
+    .catch(e => {
+      console.log('registerss Error: ', e);
+
+      return res.json(e)
+    });
+}
+
+/**
+ * @api {POST} /auth/confirmUser Registration confirmation.
+ * @APIGroup Auth
+ * @apidescription User registration confirmation action
+ * @apiparam {String} token Token what I have sent you via email.
+ * @apiSuccess {Object} userData User full info. { &lt;code>username&lt;/code>, &lt;code>email&lt;/code>, &lt;code>phoneNumber&lt;/code>, &lt;code>img_url&lt;/code>, &lt;code>firstname&lt;/code>, &lt;code>lastname&lt;/code> }
+ * @apiError UserNotFound Error on verification, please resend email.
+ */
+const confirmUser = (req, res, next) => {
+  const { token } = req.body;
+
+  let { phoneNumber } = jwt.decode(token);
+
+  console.log('phoneNumber: ', phoneNumber);
+
+  let query = User.findOne({
+    phoneNumber
+  });
+
+
+  User.findOne({
+    phoneNumber
+  }, (err, user) => {
+    user.active = true
+
+    user.save(function (err) {
+      if(err) {
+        next(err)
+      }
+      else {
+        const { username, email, phoneNumber } = user;
+
+        res.json({
+          username, email, phoneNumber
+        })
+      }
+    });
+  });
+}
+
+export default { login, register, confirmUser };
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="APIError.html">APIError</a></li><li><a href="ExtendableError.html">ExtendableError</a></li></ul><h3>Global</h3><ul><li><a href="global.html#confirmUser">confirmUser</a></li><li><a href="global.html#login">login</a></li><li><a href="global.html#register">register</a></li><li><a href="global.html#UserSchema">UserSchema</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Nov 17 2017 12:54:31 GMT+0400 (+04)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

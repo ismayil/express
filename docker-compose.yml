@@ -1,0 +1,53 @@
+version: '3'
+
+services:
+  app:
+    build:
+      context: .
+    volumes:
+      - .:/backend-app
+      - /backend-app/node_modules/
+
+    # Expose ports [HOST:CONTAINER}
+    ports:
+      - "4040:4040"
+
+    # Set environment variables from this file
+    env_file:
+      - .env
+
+    # Overwrite any env var defined in .env file (if required)
+    environment:
+      - MONGO_HOST=mongodb://mongo/vurgus-development
+      - DEBUG=backend-api:*
+      - REDIS_URL=redis
+
+    networks:
+      - redis-net
+
+    # Link to containers in another service.
+    # Links also express dependency between services in the same way as depends_on,
+    # so they determine the order of service startup.
+    links:
+      - mongo
+      - redis
+  mongo:
+    image: "mongo"
+    ports:
+      - "27017:27017"
+    networks:
+      - redis-net
+  redis:
+    image: redis:4.0.5-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    hostname: redis
+    networks:
+      - redis-net
+    volumes:
+      - redis-data:/data
+
+networks:
+  redis-net:
+
+volumes:
+  redis-data:
